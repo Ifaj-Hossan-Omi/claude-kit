@@ -384,7 +384,7 @@ const liquid = (f: Flow, fillW: number, runW: number, color: string, at: number)
     }
   }
 
-  const ahead = runW > fillW ? `<rect x="${fillW}" width="${runW - fillW}" height="${BAR_H}" fill="${color}" opacity="0.18"/>` : ''
+  const ahead = runW > fillW ? `<rect x="${fillW}" width="${runW - fillW}" height="${BAR_H}" fill="${color}" opacity="0.07"/>` : ''
   const body =
     fillW < 3
       ? ahead
@@ -460,7 +460,7 @@ const aurora = (f: Flow, fillW: number, runW: number, color: string, at: number)
     const cy = 3 + noise(i, 17) * 10
     lights.push(`<ellipse class="aur" style="animation-duration:${beat}s;animation-delay:${phase(at, beat, (i * beat) / 4)}s" cx="-70" cy="${fmt(cy)}" rx="${fmt(26 + noise(i, 19) * 14)}" ry="${fmt(7 + noise(i, 23) * 4)}" fill="${hue}" opacity="${calm ? 0.55 : 0.8}"/>`)
   }
-  const ahead = runW > fillW ? `<rect x="${fillW}" width="${runW - fillW}" height="${BAR_H}" fill="${color}" opacity="0.1"/>` : ''
+  const ahead = runW > fillW ? `<rect x="${fillW}" width="${runW - fillW}" height="${BAR_H}" fill="${color}" opacity="0.06"/>` : ''
   const seam = !calm && fillW > 4 ? `<rect class="seam" style="animation-delay:${phase(at, 1.6)}s" x="${fillW - 1.5}" width="2" height="${BAR_H}" fill="#fff"/>` : ''
   const body = `${ahead}<rect width="${Math.max(0, fillW)}" height="${BAR_H}" fill="${color}" opacity="0.45"/>
 <g clip-path="url(#fl)"><g filter="url(#ab)">${lights.join('')}</g></g>
@@ -595,7 +595,10 @@ const trackSvg = (f: Flow, BAR_W: number, at = 0, style: 'liquid' | 'pixels' | '
   const text = label(f)
   const pillW = Math.round(18 + text.length * 6.6)
   const walk = isCrab ? trail(f, fillW, runW, color, at, BAR_W, pillW) : null
-  const pillX = bx(walk ? walk.pillX : Math.max(0, Math.min(BAR_W - pillW, fillW - pillW)), pillW)
+  // The label rides the fill's head; a fill too short to hold it gets the label just ahead of it
+  // instead, so the label never covers the progress it labels.
+  const headPill = fillW >= pillW + 2 ? fillW - pillW : Math.min(BAR_W - pillW, fillW + 4)
+  const pillX = bx(walk ? walk.pillX : headPill, pillW)
   // A soft band of light sweeps along the fill toward its head (slower once finished), every
   // pass the same length of time whatever the fill's width.
   const SHEEN_W = 36

@@ -434,3 +434,18 @@ test('/bar-style lists all five looks', async ($, on) => {
   const reply = (await $.command.run({ command: 'bar-style', args: '' } as never)) as { text?: string }
   for (const style of ['pixels', 'liquid', 'crab', 'aurora', 'circuit']) expect(reply.text).toContain(style)
 })
+
+// A fill shorter than the label used to sit under it: the label was pushed back to the track's
+// start and covered it, so 14% read as an empty bar. The label now goes ahead of a short fill.
+for (const barStyle of ['liquid', 'pixels', 'aurora', 'circuit'] as const) {
+  test(`${barStyle}: the label never covers a fill shorter than itself`, { options: { barStyle } }, async ($, on) => {
+    mock.clock(on, { now: Date.parse('2026-10-16T09:00:00Z') })
+    on('ui.open', () => ({ value: { isPlaced: true } }))
+    await $.tool.call({ tool: PROGRESS, title: 'Ship it', phase: 'delegate', total: 7, done: 1 } as never)
+    const track = String((await bandSvgs($))[1])
+    const width = Number(/<svg[^>]* width="(\d+)"/.exec(track)?.[1])
+    const fillW = Math.round(width / 7)
+    const pillX = Number(/<rect x="([\d.]+)" width="\d+" height="16" rx="8" fill=/.exec(track)?.[1])
+    expect(pillX).toBeGreaterThanOrEqual(fillW)
+  })
+}
